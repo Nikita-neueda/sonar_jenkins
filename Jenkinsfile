@@ -32,20 +32,21 @@ pipeline {
             }
         }
         
-     stage('Quality Gate') {
-            steps {
-                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    // Triple double-quotes allow Jenkins to accurately expand the $SONAR_TOKEN variable
-                    // Adding 'clean' breaks the banned project cache loop
-                    sh """
-                        mvn -B clean sonar:sonar \
-                        -Dsonar.host.url=http://localhost:9000 \
-                        -Dsonar.token=${SONAR_TOKEN} \
-                        -Dsonar.qualitygate.wait=true
-                    """
-                }
-            }
+    stage('Quality Gate') {
+    steps {
+        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+            // Triple single-quotes prevent insecure Groovy interpolation.
+            // The local shell safely expands $SONAR_TOKEN from the environment.
+            sh '''
+                mvn -B clean sonar:sonar \
+                -Dsonar.host.url=http://localhost:9000 \
+                -Dsonar.token=$SONAR_TOKEN \
+                -Dsonar.qualitygate.wait=true
+            '''
         }
+    }
+}
+
 
         
         stage('Security Scans') {
