@@ -11,7 +11,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.10.2</junit.version>
-        <sonar.projectKey>sprint7-starter-codebase</sonar.projectKey>
+        <sonar.projectKey>sprint7-starter-codebase_jenkins</sonar.projectKey>
         <sonar.host.url>http://localhost:9000</sonar.host.url>
     </properties>
 
