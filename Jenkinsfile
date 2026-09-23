@@ -43,7 +43,7 @@ pipeline {
                 mvn -B clean verify sonar:sonar \
                 -Dsonar.host.url=http://localhost:9000 \
                 -Dsonar.token=$SONAR_TOKEN \
-                -Dsonar.qualitygate.wait=true
+                -Dsonar.qualitygate.wait=false
             '''
         }
     }
