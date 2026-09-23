@@ -43,16 +43,14 @@ pipeline {
                 mvn -B clean verify sonar:sonar \
                 -Dsonar.host.url=http://localhost:9000 \
                 -Dsonar.token=$SONAR_TOKEN \
-                -Dsonar.qualitygate.wait=false
-            '''
+                 -Dsonar.projectName="My Custom Project Name" \
+                        -Dsonar.qualitygate.wait=false
+                    '''
+                }
+            }
         }
     }
-}
-
-
-
-        
-       
+    
     post {
         success {
             echo "Pipeline finished successfully! View SonarQube dashboard at http://localhost:9000"
