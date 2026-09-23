@@ -1,5 +1,10 @@
 pipeline {
     agent any
+    tools {
+        // Automatically provisions JDK 21 and Maven 3 for the host execution environment
+        jdk 'JDK21'
+        maven 'Maven3'
+    }
     
     stages {
         stage('Checkout') {
