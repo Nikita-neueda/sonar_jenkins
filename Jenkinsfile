@@ -32,19 +32,21 @@ pipeline {
             }
         }
         
-        stage('Quality Gate') {
+     stage('Quality Gate') {
             steps {
-                // Using withCredentials guarantees the token isn't overridden by Jenkins system settings
                 withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-                    sh '''
-                        mvn -B sonar:sonar \
+                    // Triple double-quotes allow Jenkins to accurately expand the $SONAR_TOKEN variable
+                    // Adding 'clean' breaks the banned project cache loop
+                    sh """
+                        mvn -B clean sonar:sonar \
                         -Dsonar.host.url=http://localhost:9000 \
-                        -Dsonar.token=$SONAR_TOKEN \
+                        -Dsonar.token=${SONAR_TOKEN} \
                         -Dsonar.qualitygate.wait=true
-                    '''
+                    """
                 }
             }
         }
+
         
         stage('Security Scans') {
             // Both scans run in parallel to optimize build execution time
