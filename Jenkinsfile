@@ -1,53 +1,70 @@
 pipeline {
     agent any
-
-    tools {
-        // Ensures Maven is installed and accessible in the runtime environment
-        maven 'Maven3' 
-    }
-
-    environment {
-        // Securely binds the Jenkins secret text credential to an environment variable
-        SONAR_TOKEN = credentials('sonar-token')
-    }
-
+    
     stages {
-        stage('Clone Source Code') {
+        stage('Checkout') {
             steps {
-                // Clones your specific codebase branch
                 checkout scm
             }
         }
-
-        stage('Compile & Test') {
+        
+        stage('Build') {
             steps {
-                // Compiles the codebase before scanning
-                sh 'mvn clean compile'
+                // -B forces batch mode (reduces noisy download logs in Jenkins)
+                sh 'mvn -B clean package -DskipTests'
             }
         }
-
-        stage('SonarQube Code Analysis') {
+        
+        stage('Test') {
             steps {
-                // Injects the configured SonarQube server environment details automatically
-                withSonarQubeEnv('SonarQube-Local') {
-                    // Runs the target Maven scanner command using variables
-                    sh """
-                        mvn sonar:sonar \
-                        -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.token=${SONAR_TOKEN} \
+                sh 'mvn -B test'
+            }
+            post {
+                always {
+                    // Captures and displays your JUnit test results on the Jenkins UI
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        
+        stage('Quality Gate') {
+            steps {
+                // Using withCredentials guarantees the token isn't overridden by Jenkins system settings
+                withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                    sh '''
+                        mvn -B sonar:sonar \
+                        -Dsonar.host.url=http://localhost:9000 \
+                        -Dsonar.token=$SONAR_TOKEN \
                         -Dsonar.qualitygate.wait=true
-                    """
+                    '''
+                }
+            }
+        }
+        
+        stage('Security Scans') {
+            // Both scans run in parallel to optimize build execution time
+            parallel {
+                stage('Dependency Check') {
+                    steps {
+                        sh 'mvn -B dependency:tree'
+                    }
+                }
+                stage('Secret Scan') {
+                    steps {
+                        // Scans git history for exposed API keys, passwords, or tokens
+                        sh 'docker run --rm -v $(pwd):/repo -w /repo zricethezav/gitleaks:latest detect'
+                    }
                 }
             }
         }
     }
-
+    
     post {
         success {
-            echo "SonarQube analysis finished successfully! View results at http://localhost:9000"
+            echo "Pipeline finished successfully! View SonarQube dashboard at http://localhost:9000"
         }
         failure {
-            echo "Pipeline or Analysis failed. Review the terminal outputs above."
+            echo "Pipeline failed. Check the stage logs above to diagnose the error."
         }
     }
 }
