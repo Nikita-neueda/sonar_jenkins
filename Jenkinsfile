@@ -32,13 +32,15 @@ pipeline {
             }
         }
         
-    stage('Quality Gate') {
+   stage('Quality Gate') {
     steps {
         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
-            // Triple single-quotes prevent insecure Groovy interpolation.
-            // The local shell safely expands $SONAR_TOKEN from the environment.
             sh '''
-                mvn -B clean sonar:sonar \
+                # 1. Clear the local scanner cache to reset the project state
+                rm -rf /var/lib/jenkins/.sonar/cache
+                
+                # 2. Use 'verify' so Jenkins actually executes the tests and generates coverage reports
+                mvn -B clean verify sonar:sonar \
                 -Dsonar.host.url=http://localhost:9000 \
                 -Dsonar.token=$SONAR_TOKEN \
                 -Dsonar.qualitygate.wait=true
@@ -46,6 +48,7 @@ pipeline {
         }
     }
 }
+
 
 
         
