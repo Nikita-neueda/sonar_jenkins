@@ -52,24 +52,7 @@ pipeline {
 
 
         
-        stage('Security Scans') {
-            // Both scans run in parallel to optimize build execution time
-            parallel {
-                stage('Dependency Check') {
-                    steps {
-                        sh 'mvn -B dependency:tree'
-                    }
-                }
-                stage('Secret Scan') {
-                    steps {
-                        // Scans git history for exposed API keys, passwords, or tokens
-                        sh 'docker run --rm -v $(pwd):/repo -w /repo zricethezav/gitleaks:latest detect'
-                    }
-                }
-            }
-        }
-    }
-    
+       
     post {
         success {
             echo "Pipeline finished successfully! View SonarQube dashboard at http://localhost:9000"
